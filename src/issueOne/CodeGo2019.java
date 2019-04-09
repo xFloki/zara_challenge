@@ -330,6 +330,7 @@ public class CodeGo2019 {
 
         public Float getShippingExperiencePrice() {
             long hours = order.orderDate.until(guaranteedDeliveryDate, ChronoUnit.HOURS);
+            System.out.println(hours);
             return hours * EXPERIENCE_PRICE_BY_HOUR;
         }
 
@@ -438,38 +439,66 @@ public class CodeGo2019 {
         	System.out.println(order.getOrderDate().getDayOfWeek());
         	System.out.println(order.getOrderDate().getHour());
         	System.out.println(order.getTargetState());
+        	System.out.println(order.getItemId());
         	
+        	
+        	Item item = this.items.stream()
+        			.filter(i -> i.itemId.equals(order.getItemId())).findFirst().orElse(null);
         	List<CarrierPricing> carr = this.carrierPricings.stream()
         			.filter(c -> c.targetState.equals(order.targetState)).collect(Collectors.toList());
-        	
-        	float maxPrice = 0f;
-        	
-        	
-        	for (CarrierPricing car : carr) {
-        		System.out.println("HELLO");
-        		System.out.println(car.getTargetState());
-        		System.out.println(car.getVolumePrice());
-        		System.out.println(car.getWarehouse());
-        	}
-        	
         	List<DepartureTime> departures = this.departureTimes.stream()
         			.filter(d -> d.targetState.equals(order.targetState)).collect(Collectors.toList());
         	
-        	for (DepartureTime de : departures) {
-        		System.out.println("Departures");
-        		System.out.println(de.getWarehouse());
-        		for(ShippingHour hour : de.getShippingHours()) {
-        			LocalDateTime dt = order.getOrderDate();
-                	System.out.println("NEXT " + hour.getDay() + "is:");
-                	LocalDateTime nextDeparture = dt.with(TemporalAdjusters.next(hour.getDay())).withHour(hour.getTime().getHour()).withMinute(hour.getTime().getMinute());
-                	// Calculate for each one of the options the shipping experience price
-        			System.out.println(hour.getTime());
-        		}
+        	
+        	
+        	
+        	System.out.println("ITEM");
+        	System.out.println(item.getWeight());
+        	System.out.println(item.getItemId());
+        	
+        	System.out.println("---------------");
+        	
+        	float maxPrice = 0f;
+        	for (CarrierPricing car : carr) {
+        		System.out.println(car.getTargetState());
+        		System.out.println(car.getVolumePrice());
+        		System.out.println(car.getWarehouse());
+        		
+        		System.out.println("---------------");
+        		
+        		maxPrice = item.getWeight() * 0.1f * car.getVolumePrice();
+        		
+        		for (DepartureTime de : departures) {
+        			CarrierTime time = this.carrierTimes.stream()
+                			.filter(t -> t.targetState.equals(order.targetState) && t.warehouse.equals(de.warehouse))
+                			.findAny().orElse(null);
+        			System.out.println("TIMEEEE");
+            		for(ShippingHour hour : de.getShippingHours()) {
+            			LocalDateTime dt = order.getOrderDate().plusHours(PACKAGE_PREPARATION_HOURS);
+                    	LocalDateTime nextDeparture =
+                    			dt.with(TemporalAdjusters.next(hour.getDay()))
+                    				.withHour(hour.getTime().getHour())
+                    				.withMinute(hour.getTime().getMinute());
+                    	LocalDateTime nextDeparture2 = nextDeparture.minusHours(de.getWarehouse().timeZoneOffset)
+                    			.plusHours(time.getCarrierTime());
+                    	// Calculate for each one of the options the shipping experience price
+                    	
+                    	
+                    	
+                    	ShipmentInfo infoTest = new ShipmentInfo(order, de.warehouse, nextDeparture2, "L", maxPrice);
+                    	
+
+                    	System.out.println("Hour Difference");
+                    	System.out.println("SHIPMENT READY ON " + nextDeparture2 + " WEEKDAY " + nextDeparture2.getDayOfWeek());
+                    	System.out.println(infoTest.getShippingExperiencePrice());
+                    	
+            		}
+            	}
         	}
         	
-        	ShipmentInfo infoTest = new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);
-        	System.out.println("EXPERIENCE PRICE");
-        	System.out.println(infoTest.getShippingExperiencePrice());
+        	
+        	
+        	//ShipmentInfo infoTest = new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);
         	
         	
             return new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);

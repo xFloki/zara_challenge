@@ -1,1 +1,3 @@
+#Ignore all txt files
 *.txt
+debug.log
