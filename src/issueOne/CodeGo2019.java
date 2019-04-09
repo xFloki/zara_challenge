@@ -446,8 +446,36 @@ public class CodeGo2019 {
         	System.out.println(order.getTargetState());
         	
         	
+        	
+        	
+        	
         	Item item = this.items.stream()
         			.filter(i -> i.itemId.equals(order.getItemId())).findFirst().orElse(null);
+        	
+        	BoxType selectedBox = null;
+        	// CHOOSE BEST BOX TYPE
+        	for (BoxType box : this.boxTypes) {
+        		System.out.println("BOXTYPE");
+        		System.out.println(box.boxType);
+        		System.out.println(box.height);
+        		System.out.println(box.width);
+        		System.out.println(box.length);
+        		System.out.println(box.maxWeight);
+        		System.out.println(box.volume);
+        		System.out.println("----------");
+        		if(box.maxWeight < item.weight) continue;
+        		if(box.height < item.height) continue;
+        		if(box.width < item.width && box.length < item.length 
+        				&& box.width < item.length && box.length < box.width) {
+        			continue;
+        		}
+        		
+        		selectedBox = box;
+        		System.out.println("BOX FOUND!");
+        		break;
+        		
+        	}
+        	
         	List<CarrierPricing> carr = this.carrierPricings.stream()
         			.filter(c -> c.targetState.equals(order.targetState)).collect(Collectors.toList());
         	
@@ -468,9 +496,10 @@ public class CodeGo2019 {
 			System.out.println("----------------");
 			System.out.println(dt);
 			
-			//TODO LOOP THROUGH WAREHOUSES AND GET CARRIER PRICING INSTEAD
-			//IF WAREHOUSE DONT HAVE STOCK REMOVE FROM LOOP
-        	for (CarrierPricing car : carr) {
+        	for (Warehouse warehouse : Warehouse.values()) {
+        		CarrierPricing car = this.carrierPricings.stream()
+            			.filter(c -> c.warehouse.equals(warehouse) && c.targetState.equals(order.targetState))
+            			.findFirst().orElse(null);
         		
         		System.out.println("------------------------");
             	
@@ -483,7 +512,7 @@ public class CodeGo2019 {
         		
         		System.out.println("------------------------");
         		
-        		shipingPrice = item.getWeight() * 0.1f * car.getVolumePrice();
+        		shipingPrice = selectedBox.getVolume() * car.getVolumePrice();
         		
         		System.out.println(shipingPrice);
         		
@@ -539,7 +568,7 @@ public class CodeGo2019 {
                     	
                     	// Calculate for each one of the options the shipping experience price
                     	
-                    	ShipmentInfo infoTest = new ShipmentInfo(order, car.warehouse, deliveredGuarented, "L", shipingPrice);
+                    	ShipmentInfo infoTest = new ShipmentInfo(order, car.warehouse, deliveredGuarented, selectedBox.getBoxType(), shipingPrice);
                     	System.out.println(infoTest.getShippingExperiencePrice());
                     	if (best == null) {
                     		best = infoTest;
@@ -550,6 +579,12 @@ public class CodeGo2019 {
                 		if (best.getTotalPrice() > infoTest.getTotalPrice()) {
                 			best = infoTest;
                 		} 
+                		
+                		System.out.println("----------------- PRICES -------------------");
+                		System.out.println("------TOTAL PRICE: " + infoTest.getTotalPrice() + " ------");
+                		System.out.println("------PRICE EXPERIENCE " + infoTest.getShippingExperiencePrice() + " ------");
+                		System.out.println("------PRICE SHIPPING " + infoTest.getShippingPrice() + " ------");
+            			System.out.println("---------------------------------");
                 		
                 		
             			
