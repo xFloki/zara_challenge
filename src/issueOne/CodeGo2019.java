@@ -330,7 +330,6 @@ public class CodeGo2019 {
 
         public Float getShippingExperiencePrice() {
             long hours = order.orderDate.until(guaranteedDeliveryDate, ChronoUnit.HOURS);
-            System.out.println(hours);
             return hours * EXPERIENCE_PRICE_BY_HOUR;
         }
 
@@ -435,64 +434,141 @@ public class CodeGo2019 {
 
         public ShipmentInfo findBestShipmentInfo(Order order) {
         	
+        	System.out.println("---------------");
+        	
+        	System.out.println("-----ORDER-----");
+        	
+        	System.out.println("---------------");
+        	
+        	
         	System.out.println(order.getOrderDate());
         	System.out.println(order.getOrderDate().getDayOfWeek());
-        	System.out.println(order.getOrderDate().getHour());
         	System.out.println(order.getTargetState());
-        	System.out.println(order.getItemId());
         	
         	
         	Item item = this.items.stream()
         			.filter(i -> i.itemId.equals(order.getItemId())).findFirst().orElse(null);
         	List<CarrierPricing> carr = this.carrierPricings.stream()
         			.filter(c -> c.targetState.equals(order.targetState)).collect(Collectors.toList());
-        	List<DepartureTime> departures = this.departureTimes.stream()
-        			.filter(d -> d.targetState.equals(order.targetState)).collect(Collectors.toList());
-        	
-        	
-        	
-        	
-        	System.out.println("ITEM");
-        	System.out.println(item.getWeight());
-        	System.out.println(item.getItemId());
         	
         	System.out.println("---------------");
         	
-        	float maxPrice = 0f;
+        	System.out.println("-----ITEM-----");
+        	
+        	System.out.println("---------------");
+        	
+        	System.out.println(item.getWeight());
+        	System.out.println(item.getItemId());
+        	
+        	float shipingPrice = 0f;
+        	ShipmentInfo best = null;
+        	LocalDateTime dt = order.getOrderDate().plusHours(PACKAGE_PREPARATION_HOURS);
+        	System.out.println("----------------");
+        	System.out.println("------READY-----");
+			System.out.println("----------------");
+			System.out.println(dt);
+			
+			//TODO LOOP THROUGH WAREHOUSES AND GET CARRIER PRICING INSTEAD
+			//IF WAREHOUSE DONT HAVE STOCK REMOVE FROM LOOP
         	for (CarrierPricing car : carr) {
+        		
+        		System.out.println("------------------------");
+            	
+            	System.out.println("-----SHIPPING PRICE-----");
+            	
+            	System.out.println("------------------------");
         		System.out.println(car.getTargetState());
         		System.out.println(car.getVolumePrice());
         		System.out.println(car.getWarehouse());
         		
-        		System.out.println("---------------");
+        		System.out.println("------------------------");
         		
-        		maxPrice = item.getWeight() * 0.1f * car.getVolumePrice();
+        		shipingPrice = item.getWeight() * 0.1f * car.getVolumePrice();
+        		
+        		System.out.println(shipingPrice);
+        		
+        		System.out.println("------------------------");
+        		
+        		List<DepartureTime> departures = this.departureTimes.stream()
+            			.filter(d -> d.targetState.equals(car.targetState) && d.warehouse.equals(car.getWarehouse()))
+            			.collect(Collectors.toList());
+        		CarrierTime time = this.carrierTimes.stream()
+            			.filter(t -> t.targetState.equals(car.targetState) && t.warehouse.equals(car.warehouse))
+            			.findFirst().orElse(null);
+        		
+        		Stock stock = this.initialStocks.stream()
+            			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(car.warehouse)).findFirst().orElse(null);
+        		
+        		System.out.println("----------------------STOCK--------------------");
+        		System.out.println("------PRODUCT " + stock.getItemId() + "------");
+    			System.out.println("------QUANTITY " + stock.getStock() + "--------");
+    			System.out.println("---------------------------------");
+    			System.out.println("------------------------------------------------");
         		
         		for (DepartureTime de : departures) {
-        			CarrierTime time = this.carrierTimes.stream()
-                			.filter(t -> t.targetState.equals(order.targetState) && t.warehouse.equals(de.warehouse))
-                			.findAny().orElse(null);
-        			System.out.println("TIMEEEE");
+        			
+        			System.out.println("------------------------------");
+        			System.out.println("------DEPARTURE " + de.warehouse + "------");
+        			System.out.println("------------------------------");
             		for(ShippingHour hour : de.getShippingHours()) {
-            			LocalDateTime dt = order.getOrderDate().plusHours(PACKAGE_PREPARATION_HOURS);
-                    	LocalDateTime nextDeparture =
+            			System.out.println("--------TIME---------");
+            			System.out.println(hour.getDay() + " " + hour.getTime());
+            			System.out.println("---------------------");
+                    	LocalDateTime nextDepartureDate =
                     			dt.with(TemporalAdjusters.next(hour.getDay()))
                     				.withHour(hour.getTime().getHour())
                     				.withMinute(hour.getTime().getMinute());
-                    	LocalDateTime nextDeparture2 = nextDeparture.minusHours(de.getWarehouse().timeZoneOffset)
-                    			.plusHours(time.getCarrierTime());
+                    	System.out.println("------TIME DEPART------");
+            			System.out.println(nextDepartureDate);
+            			System.out.println("-----------------------");
+            			
+                    	LocalDateTime nextDepartureDateUTC = nextDepartureDate.minusHours(car.getWarehouse().timeZoneOffset);
+                    	
+                    	System.out.println("------TIME TRANS------");
+            			System.out.println(nextDepartureDateUTC);
+            			System.out.println("-----------------------");
+            			
+            			LocalDateTime deliveredGuarented = nextDepartureDateUTC.plusHours(time.carrierTime);
+            			
+            			System.out.println("------DELIVER GUARANTEE------");
+            			System.out.println(deliveredGuarented);
+            			System.out.println("-----------------------------------------");
+            			System.out.println("-------------TIME TRANSPORT---------------");
+            			System.out.println(time.getCarrierTime() + " FROM " + time.getWarehouse() + " TO " + time.getTargetState());
+            			System.out.println("----------------------------------------");
+                    	
                     	// Calculate for each one of the options the shipping experience price
                     	
+                    	ShipmentInfo infoTest = new ShipmentInfo(order, car.warehouse, deliveredGuarented, "L", shipingPrice);
+                    	System.out.println(infoTest.getShippingExperiencePrice());
+                    	if (best == null) {
+                    		best = infoTest;
+                    	} 
                     	
-                    	
-                    	ShipmentInfo infoTest = new ShipmentInfo(order, de.warehouse, nextDeparture2, "L", maxPrice);
+            
+                		
+                		if (best.getTotalPrice() > infoTest.getTotalPrice()) {
+                			best = infoTest;
+                		} 
+                		
+                		
+            			
+//                		else if (best.getShippingExperiencePrice() == infoTest.getShippingExperiencePrice()) {
+//                			Stock stock1 = this.initialStocks.stream()
+//                        			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(Warehouse.NEW_YORK)).findFirst().orElse(null);
+//                			Stock stock2 = this.initialStocks.stream()
+//                        			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(Warehouse.SAN_FRANCISCO)).findFirst().orElse(null);
+//                			if (infoTest.warehouse == Warehouse.NEW_YORK && stock1.getStock() > stock2.getStock()) {
+//                				best = infoTest;
+//                			}
+//                			if (infoTest.warehouse == Warehouse.SAN_FRANCISCO && stock2.getStock() > stock1.getStock()) {
+//                				best = infoTest;
+//                			}
+//                		}
                     	
 
-                    	System.out.println("Hour Difference");
-                    	System.out.println("SHIPMENT READY ON " + nextDeparture2 + " WEEKDAY " + nextDeparture2.getDayOfWeek());
-                    	System.out.println(infoTest.getShippingExperiencePrice());
-                    	
             		}
+            		
             	}
         	}
         	
@@ -501,7 +577,8 @@ public class CodeGo2019 {
         	//ShipmentInfo infoTest = new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);
         	
         	
-            return new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);
+            //return new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);
+        	return best;
         }
 
     }
