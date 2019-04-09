@@ -445,24 +445,12 @@ public class CodeGo2019 {
         	System.out.println(order.getOrderDate().getDayOfWeek());
         	System.out.println(order.getTargetState());
         	
-        	
-        	
-        	
-        	
         	Item item = this.items.stream()
         			.filter(i -> i.itemId.equals(order.getItemId())).findFirst().orElse(null);
         	
         	BoxType selectedBox = null;
         	// CHOOSE BEST BOX TYPE
         	for (BoxType box : this.boxTypes) {
-        		System.out.println("BOXTYPE");
-        		System.out.println(box.boxType);
-        		System.out.println(box.height);
-        		System.out.println(box.width);
-        		System.out.println(box.length);
-        		System.out.println(box.maxWeight);
-        		System.out.println(box.volume);
-        		System.out.println("----------");
         		if(box.maxWeight < item.weight) continue;
         		if(box.height < item.height) continue;
         		if(box.width < item.width && box.length < item.length 
@@ -471,9 +459,7 @@ public class CodeGo2019 {
         		}
         		
         		selectedBox = box;
-        		System.out.println("BOX FOUND!");
         		break;
-        		
         	}
         	
         	List<CarrierPricing> carr = this.carrierPricings.stream()
@@ -497,6 +483,10 @@ public class CodeGo2019 {
 			System.out.println(dt);
 			
         	for (Warehouse warehouse : Warehouse.values()) {
+        		Stock stock = this.initialStocks.stream()
+            			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(warehouse)).findFirst().orElse(null);
+        		if(stock.getStock() == 0) continue;
+        		
         		CarrierPricing car = this.carrierPricings.stream()
             			.filter(c -> c.warehouse.equals(warehouse) && c.targetState.equals(order.targetState))
             			.findFirst().orElse(null);
@@ -525,8 +515,7 @@ public class CodeGo2019 {
             			.filter(t -> t.targetState.equals(car.targetState) && t.warehouse.equals(car.warehouse))
             			.findFirst().orElse(null);
         		
-        		Stock stock = this.initialStocks.stream()
-            			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(car.warehouse)).findFirst().orElse(null);
+        		
         		
         		System.out.println("----------------------STOCK--------------------");
         		System.out.println("------PRODUCT " + stock.getItemId() + "------");
@@ -543,17 +532,29 @@ public class CodeGo2019 {
             			System.out.println("--------TIME---------");
             			System.out.println(hour.getDay() + " " + hour.getTime());
             			System.out.println("---------------------");
+            			System.out.println(warehouse.timeZoneOffset);
+            			System.out.println(dt);
+            			System.out.println(dt.plusHours(warehouse.timeZoneOffset));
                     	LocalDateTime nextDepartureDate =
-                    			dt.with(TemporalAdjusters.next(hour.getDay()))
+                    			dt.plusHours(warehouse.timeZoneOffset).with(TemporalAdjusters.nextOrSame(hour.getDay()))
                     				.withHour(hour.getTime().getHour())
                     				.withMinute(hour.getTime().getMinute());
                     	System.out.println("------TIME DEPART------");
             			System.out.println(nextDepartureDate);
             			System.out.println("-----------------------");
             			
+            			// DELIVER IN THE SAME DAY BUT NOT EARLY ENOUGH
+            			if(dt.plusHours(warehouse.timeZoneOffset).isAfter(nextDepartureDate)) {
+            				System.out.println("--------ALERT---------");
+            				System.out.println("--------ALERT---------");
+            				System.out.println("--------ALERT---------");
+            				System.out.println("--------ALERT---------");
+            				continue;
+            			}
+            			
                     	LocalDateTime nextDepartureDateUTC = nextDepartureDate.minusHours(car.getWarehouse().timeZoneOffset);
                     	
-                    	System.out.println("------TIME TRANS------");
+                    	System.out.println("------TIME DEPART UTC------");
             			System.out.println(nextDepartureDateUTC);
             			System.out.println("-----------------------");
             			
