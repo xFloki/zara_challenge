@@ -395,14 +395,16 @@ public class CodeGo2019 {
     }
 
     static class ShipmentsManager {
-
-        final Integer PACKAGE_PREPARATION_HOURS = 4;
-		private List<BoxType> boxTypes;
+    	
+    	private List<BoxType> boxTypes;
 		private List<Item> items;
 		private List<CarrierPricing> carrierPricings;
 		private List<DepartureTime> departureTimes;
 		private List<CarrierTime> carrierTimes;
 		private List<Stock> initialStocks;
+
+        final Integer PACKAGE_PREPARATION_HOURS = 4;
+		
 
         static class NoSuitableBoxException extends RuntimeException {
             private static final long serialVersionUID = 7513400494522133911L;
@@ -420,7 +422,7 @@ public class CodeGo2019 {
                         + targetState);
             }
         }
-
+        
         public ShipmentsManager(List<Item> items, List<BoxType> boxTypes, List<CarrierPricing> carrierPricings,
                 List<DepartureTime> departureTimes, List<CarrierTime> carrierTimes, List<Stock> initialStocks) {
         	this.items = items;
@@ -612,40 +614,12 @@ public class CodeGo2019 {
             	}
         	}
         	
-        	
-        	
-        	//ShipmentInfo infoTest = new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);
-        	
-        	
-            //return new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);
-        	// Collectors.groupingBy
-        	// https://stackoverflow.com/questions/31575621/conditional-mapping-to-new-objects-with-a-java-stream
-        	
-        	
-        	System.out.println("HATTATTATTATT");
         	final Warehouse selectedWarehouseString = best.warehouse;
-        	
-        	System.out.println("PRE");
-        	System.out.println(order.itemId);
-        	for (Stock stoky: this.initialStocks) {
-        		//System.out.println(stoky.itemId);
-        		if(order.itemId .equals(stoky.itemId)) {
-        			System.out.println(stoky.itemId + " --> " + stoky.stock);
-        		}
-        	}
         	
         	//UPDATE STOCK
         	this.initialStocks = this.initialStocks.stream()
         			.map(o ->  o.itemId.equals(order.itemId) && o.warehouse.equals(selectedWarehouseString) ?
         					new Stock(order.itemId, selectedWarehouseString, o.stock - 1) : o ).collect(Collectors.toList());
-        	
-        	System.out.println("AFTER");
-        	for (Stock stoky: this.initialStocks) {
-        		if(order.itemId .equals(stoky.itemId)) {
-        			System.out.println(stoky.itemId + " --> " + stoky.stock);
-        		}
-        	}
-        	
         	
         	return best;
         }
