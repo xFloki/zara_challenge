@@ -1,3 +1,5 @@
+package issueTwo;
+
 import java.io.*;
 import java.text.*;
 import java.time.*;
@@ -420,4 +422,6 @@ public class CodeGo2019ByGroup {
         public List<ShipmentInfo> findBestShipmentInfo(List<Order> orders) {
             return new ArrayList<ShipmentInfo>();
         }
+    }
+}
 
