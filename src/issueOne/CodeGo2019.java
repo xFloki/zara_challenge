@@ -1,14 +1,12 @@
 package issueOne;
 
 import java.io.*;
-import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.text.*;
 import java.time.*;
 import java.time.format.*;
 import java.time.temporal.*;
 import java.util.*;
-import java.util.Map.*;
 import java.util.function.*;
 import java.util.stream.*;
 
@@ -550,10 +548,6 @@ public class CodeGo2019 {
             			
             			// DELIVER IN THE SAME DAY BUT NOT EARLY ENOUGH
             			if(dt.plusHours(warehouse.timeZoneOffset).isAfter(nextDepartureDate)) {
-            				System.out.println("--------ALERT---------");
-            				System.out.println("--------ALERT---------");
-            				System.out.println("--------ALERT---------");
-            				System.out.println("--------ALERT---------");
             				continue;
             			}
             			
@@ -593,16 +587,23 @@ public class CodeGo2019 {
             			System.out.println("---------------------------------");
                 		
                 		
-            			
-                		if (best.getTotalPrice() == infoTest.getTotalPrice()) {
+            			float a = best.getTotalPrice();
+            			float b = infoTest.getTotalPrice();
+                		if (-0.0001 <= a-b && a-b <= 0.0001) {
+                			System.out.println("--------ALERT---------");
+            				System.out.println("--------ALERT---------");
+            				System.out.println("--------ALERT---------");
+            				System.out.println("--------ALERT---------");
                 			Stock stock1 = this.initialStocks.stream()
                         			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(Warehouse.NEW_YORK)).findFirst().orElse(null);
+                			System.out.println("STOCK NEW YORK  " + stock1);
                 			Stock stock2 = this.initialStocks.stream()
                         			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(Warehouse.SAN_FRANCISCO)).findFirst().orElse(null);
-                			if (infoTest.warehouse == Warehouse.NEW_YORK && stock1.getStock() > stock2.getStock()) {
+                			System.out.println("STOCK SAN FRANCISCO  " + stock2);
+                			if (infoTest.warehouse == Warehouse.NEW_YORK && stock1.stock >= stock2.stock) {
                 				best = infoTest;
                 			}
-                			if (infoTest.warehouse == Warehouse.SAN_FRANCISCO && stock2.getStock() > stock1.getStock()) {
+                			if (infoTest.warehouse == Warehouse.SAN_FRANCISCO && stock2.stock >= stock1.stock) {
                 				best = infoTest;
                 			}
                 		}
