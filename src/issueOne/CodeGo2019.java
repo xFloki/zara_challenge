@@ -1,6 +1,7 @@
 package issueOne;
 
 import java.io.*;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.text.*;
 import java.time.*;
@@ -453,8 +454,11 @@ public class CodeGo2019 {
         	for (BoxType box : this.boxTypes) {
         		if(box.maxWeight < item.weight) continue;
         		if(box.height < item.height) continue;
-        		if(box.width < item.width && box.length < item.length 
-        				&& box.width < item.length && box.length < box.width) {
+        		System.out.println("ANALYZING BOX TYPE " + box.boxType);
+        		System.out.println("WIDTH " + box.width);
+        		System.out.println("LENGTH " + box.length);
+        		if((box.width < item.width || box.length < item.length) 
+        				&& (box.width < item.length || box.length < item.width)) {
         			continue;
         		}
         		
@@ -462,16 +466,16 @@ public class CodeGo2019 {
         		break;
         	}
         	
-        	List<CarrierPricing> carr = this.carrierPricings.stream()
-        			.filter(c -> c.targetState.equals(order.targetState)).collect(Collectors.toList());
-        	
         	System.out.println("---------------");
         	
         	System.out.println("-----ITEM-----");
         	
         	System.out.println("---------------");
         	
-        	System.out.println(item.getWeight());
+        	System.out.println(item.weight);
+        	System.out.println("LENGTH " + item.length);
+    		System.out.println("WIDTH " + item.width);
+        	System.out.println(item.height);
         	System.out.println(item.getItemId());
         	
         	float shipingPrice = 0f;
@@ -482,10 +486,11 @@ public class CodeGo2019 {
 			System.out.println("----------------");
 			System.out.println(dt);
 			
+			
         	for (Warehouse warehouse : Warehouse.values()) {
         		Stock stock = this.initialStocks.stream()
             			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(warehouse)).findFirst().orElse(null);
-        		if(stock.getStock() == 0) continue;
+        		if(stock.stock == 0) continue;
         		
         		CarrierPricing car = this.carrierPricings.stream()
             			.filter(c -> c.warehouse.equals(warehouse) && c.targetState.equals(order.targetState))
@@ -576,7 +581,7 @@ public class CodeGo2019 {
                     	} 
                     	
             
-                		
+                		// GETTER BETTER PRICE ONE
                 		if (best.getTotalPrice() > infoTest.getTotalPrice()) {
                 			best = infoTest;
                 		} 
@@ -589,20 +594,18 @@ public class CodeGo2019 {
                 		
                 		
             			
-//                		else if (best.getShippingExperiencePrice() == infoTest.getShippingExperiencePrice()) {
-//                			Stock stock1 = this.initialStocks.stream()
-//                        			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(Warehouse.NEW_YORK)).findFirst().orElse(null);
-//                			Stock stock2 = this.initialStocks.stream()
-//                        			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(Warehouse.SAN_FRANCISCO)).findFirst().orElse(null);
-//                			if (infoTest.warehouse == Warehouse.NEW_YORK && stock1.getStock() > stock2.getStock()) {
-//                				best = infoTest;
-//                			}
-//                			if (infoTest.warehouse == Warehouse.SAN_FRANCISCO && stock2.getStock() > stock1.getStock()) {
-//                				best = infoTest;
-//                			}
-//                		}
-                    	
-
+                		if (best.getTotalPrice() == infoTest.getTotalPrice()) {
+                			Stock stock1 = this.initialStocks.stream()
+                        			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(Warehouse.NEW_YORK)).findFirst().orElse(null);
+                			Stock stock2 = this.initialStocks.stream()
+                        			.filter(s -> s.itemId.equals(order.getItemId()) && s.warehouse.equals(Warehouse.SAN_FRANCISCO)).findFirst().orElse(null);
+                			if (infoTest.warehouse == Warehouse.NEW_YORK && stock1.getStock() > stock2.getStock()) {
+                				best = infoTest;
+                			}
+                			if (infoTest.warehouse == Warehouse.SAN_FRANCISCO && stock2.getStock() > stock1.getStock()) {
+                				best = infoTest;
+                			}
+                		}
             		}
             		
             	}
@@ -614,6 +617,35 @@ public class CodeGo2019 {
         	
         	
             //return new ShipmentInfo(order, Warehouse.NEW_YORK, LocalDateTime.now(), "L", 1.0f);
+        	// Collectors.groupingBy
+        	// https://stackoverflow.com/questions/31575621/conditional-mapping-to-new-objects-with-a-java-stream
+        	
+        	
+        	System.out.println("HATTATTATTATT");
+        	final Warehouse selectedWarehouseString = best.warehouse;
+        	
+        	System.out.println("PRE");
+        	System.out.println(order.itemId);
+        	for (Stock stoky: this.initialStocks) {
+        		//System.out.println(stoky.itemId);
+        		if(order.itemId .equals(stoky.itemId)) {
+        			System.out.println(stoky.itemId + " --> " + stoky.stock);
+        		}
+        	}
+        	
+        	//UPDATE STOCK
+        	this.initialStocks = this.initialStocks.stream()
+        			.map(o ->  o.itemId.equals(order.itemId) && o.warehouse.equals(selectedWarehouseString) ?
+        					new Stock(order.itemId, selectedWarehouseString, o.stock - 1) : o ).collect(Collectors.toList());
+        	
+        	System.out.println("AFTER");
+        	for (Stock stoky: this.initialStocks) {
+        		if(order.itemId .equals(stoky.itemId)) {
+        			System.out.println(stoky.itemId + " --> " + stoky.stock);
+        		}
+        	}
+        	
+        	
         	return best;
         }
 
